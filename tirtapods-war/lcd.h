@@ -3,6 +3,7 @@
 
 namespace lcd {
   enum MessageID {
+    CUSTOM,
     BLANK,
     STANDBY,
     NORMALIZING,
@@ -25,7 +26,8 @@ namespace lcd {
     PATH_ON_RIGHT,
     PATH_ON_FRONT,
     PATH_ON_LEFT,
-    NO_PATH
+    NO_PATH,
+    FOUND_SRWR
   };
 
   MessageID state_activeMessageIDs[2] = { BLANK, BLANK };
@@ -35,6 +37,23 @@ namespace lcd {
   void setup () {
     lcd.begin();
     lcd.backlight();
+  }
+
+  void justPrint (String firstRow, String secondRow = "") {
+    state_activeMessageIDs[0] = CUSTOM;
+    state_activeMessageIDs[1] = CUSTOM;
+
+    lcd.setCursor(0, 0);                          // set cursor to first column at selected row
+    lcd.print(firstRow);                          // clear selected row
+    lcd.setCursor(0, 1);                          // set cursor back to first column
+    lcd.print(secondRow);                         // clear selected row
+  }
+
+  void clean () {
+    lcd.setCursor(0, 0);                          // set cursor to first column at selected row
+    lcd.print(F("                     "));        // clear selected row
+    lcd.setCursor(0, 1);                          // set cursor back to first column
+    lcd.print(F("                     "));        // clear selected row
   }
 
   void message (int row, MessageID id) {
@@ -54,72 +73,74 @@ namespace lcd {
         lcd.print(F(""));
         break;
       case STANDBY:
-        lcd.print(F("ROBOT IS STANDBY"));
+        lcd.print(F("Standby      ^_^"));
         break;
       case NORMALIZING:
-        lcd.print(F("NORMALIZING LEGS"));
+        lcd.print(F("Normalizing legs"));
         break;
       case MOVING_FORWARD:
-        lcd.print(F("MOVING FORWARD"));
+        lcd.print(F("Moving forward v"));
         break;
       case MOVING_BACKWARD:
-        lcd.print(F("MOVING BACKWARD"));
+        lcd.print(F("Moving backward^"));
         break;
       case SHIFTING_RIGHT:
-        lcd.print(F("SHIFTING RIGHT"));
+        lcd.print(F("Shifting right <"));
         break;
       case SHIFTING_LEFT:
-        lcd.print(F("SHIFTING LEFT"));
+        lcd.print(F("Shifting left  >"));
         break;
       case ROTATING_CW:
-        lcd.print(F("ROTATING CW"));
+        lcd.print(F("Rotating CW    <"));
         break;
       case ROTATING_CCW:
-        lcd.print(F("ROTATING CCW"));
+        lcd.print(F("Rotating CCW   >"));
         break;
       case TURNING_RIGHT:
-        lcd.print(F("TURNING RIGHT"));
+        lcd.print(F("Turning right  <"));
         break;
       case TURNING_LEFT:
-        lcd.print(F("TURNING LEFT"));
+        lcd.print(F("Turning left   >"));
         break;
       case EXTINGUISHING:
-        lcd.print(F("EXTINGUISHING"));
+        lcd.print(F("Extinguishing  |"));
         break;
       case WALL_ON_RIGHT:
-        lcd.print(F("WALL ON RIGHT"));
+        lcd.print(F("Wall on right"));
         break;
       case WALL_ON_FRONT:
-        lcd.print(F("WALL ON FRONT"));
+        lcd.print(F("Wall on front"));
         break;
       case WALL_ON_LEFT:
-        lcd.print(F("WALL ON LEFT"));
+        lcd.print(F("Wall on left"));
         break;
       case THERE_IS_OBSTACLE:
-        lcd.print(F("THERE'S OBSTACLE"));
+        lcd.print(F("There's obstacle"));
         break;
       case FIRE_ON_RIGHT:
-        lcd.print(F("FIRE ON RIGHT"));
+        lcd.print(F("Fire on right"));
         break;
       case FIRE_ON_CENTER:
-        lcd.print(F("FIRE ON CENTER"));
+        lcd.print(F("Fire on center"));
         break;
       case FIRE_ON_LEFT:
-        lcd.print(F("FIRE ON LEFT"));
+        lcd.print(F("Fire on left"));
         break;
       case PATH_ON_RIGHT:
-        lcd.print(F("PATH ON RIGHT"));
+        lcd.print(F("Path on right"));
         break;
       case PATH_ON_FRONT:
-        lcd.print(F("PATH ON FRONT"));
+        lcd.print(F("Path on front"));
         break;
       case PATH_ON_LEFT:
-        lcd.print(F("PATH ON LEFT"));
+        lcd.print(F("Path on left"));
         break;
       case NO_PATH:
-        lcd.print(F("NO PATH"));
+        lcd.print(F("No path"));
+        break;
+      case FOUND_SRWR:
+        lcd.print(F("Found SRWR"));
         break;
     }
   }
 }
-

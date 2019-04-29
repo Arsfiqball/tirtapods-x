@@ -26,38 +26,71 @@ void loop () {
     proxy::update();
     flame::update();
 
-    if (flameDetection()) return;
     if (!avoidWall()) return;
+    if (flameDetection()) return;
     if (!avoidObstacle()) return;
     if (!getCloser2SRWR()) return;
     traceRoute();
   } else {
-    standBy();
+    if (activation::isMenu) {
+      Serial.print("menu: ");
+      Serial.println(activation::activeMenu);
+      if (activation::isMenuChanged) lcd::clean();
+      switch (activation::activeMenu) {
+        case 0:
+          lcd::justPrint(ping::debug(), ping::debug1());
+          break;
+        case 1:
+          lcd::justPrint(flame::debug(), flame::debug1());
+          break;
+        case 2:
+          lcd::justPrint(proxy::debug(), activation::debugSoundActivation());
+          break;
+        case 3:
+          lcd::justPrint("Press start to", "extinguish");
+          pump::activate(activation::isStartPushed);
+          break;
+        default:
+          lcd::justPrint("== DEBUG MODE ==", "Press stop again");
+      }
+    } else {
+      Serial.println("no menu");
+      standBy();
+    }
   }
 }
 
 void standBy () {
-  if (!legs::isNormalized && !legs::isStandby) {
-    legs::normalize();
-  } else if (legs::isNormalized && !legs::isStandby) {
-    legs::standby();
+  if (legs::isStandby) {
+    lcd::message(0, lcd::STANDBY);
+    lcd::message(1, lcd::BLANK);
+    return;
   }
 
-  lcd::message(0, lcd::STANDBY);
+  if (legs::isNormalized) {
+    legs::standby();
+    return;
+  }
+
+  lcd::message(0, lcd::NORMALIZING);
   lcd::message(1, lcd::BLANK);
+  legs::normalize();
 }
 
 bool avoidObstacle () {
-  if (proxy::isDetectingSomething && !ping::far_c) {
+  if (proxy::isDetectingSomething && !ping::far_b && !ping::far_c && !ping::far_d) {
     lcd::message(0, lcd::THERE_IS_OBSTACLE);
 
-    if (!ping::far_a && !ping::far_b) {
-      lcd::message(1, lcd::ROTATING_CW);
-      legs::rotateCW();
-    } else {
-      lcd::message(1, lcd::ROTATING_CCW);
-      legs::rotateCCW();
+    if (!legs::isNormalized) {
+      legs::normalize();
+      return false;
     }
+
+    legs::ssc_rotateCCW_sync();
+    legs::ssc_rotateCCW_sync();
+    legs::ssc_rotateCCW_sync();
+    legs::ssc_rotateCCW_sync();
+    legs::ssc_rotateCCW_sync();
 
     return false;
   }
@@ -119,19 +152,47 @@ bool avoidWall () {
 }
 
 bool flameDetection () {
-  if (flame::is_right) {
+  Serial.println(proxy::isDetectingSomething);
+
+  if (flame::is_right && (ping::near_b || ping::near_a)) {
     lcd::message(0, lcd::FIRE_ON_RIGHT);
-    lcd::message(1, lcd::ROTATING_CW);
-    legs::rotateCWLess();
-    pump::off();
+    lcd::message(1, lcd::SHIFTING_LEFT);
+    legs::shiftLeft();
     return true;
   }
 
-  if (flame::is_left) {
+  if (flame::is_left && (ping::near_d || ping::near_e)) {
+    lcd::message(0, lcd::FIRE_ON_LEFT);
+    lcd::message(1, lcd::SHIFTING_RIGHT);
+    legs::shiftRight();
+    return true;
+  }
+
+  if (flame::is_right && !flame::is_left && !flame::is_center) {
+    lcd::message(0, lcd::FIRE_ON_RIGHT);
+    lcd::message(1, lcd::ROTATING_CW);
+    legs::rotateCW();
+    return true;
+  }
+
+  if (flame::is_left && !flame::is_right && !flame::is_center) {
+    lcd::message(0, lcd::FIRE_ON_LEFT);
+    lcd::message(1, lcd::ROTATING_CCW);
+    legs::rotateCCW();
+    return true;
+  }
+
+  if (flame::is_right && !flame::is_left && flame::is_center) {
+    lcd::message(0, lcd::FIRE_ON_RIGHT);
+    lcd::message(1, lcd::ROTATING_CW);
+    legs::rotateCWLess();
+    return true;
+  }
+
+  if (flame::is_left && !flame::is_right && flame::is_center) {
     lcd::message(0, lcd::FIRE_ON_LEFT);
     lcd::message(1, lcd::ROTATING_CCW);
     legs::rotateCCWLess();
-    pump::off();
     return true;
   }
 
@@ -141,24 +202,15 @@ bool flameDetection () {
     if (ping::near_b) {
       lcd::message(1, lcd::ROTATING_CCW);
       legs::rotateCCWLess();
-      pump::off();
     } else if (ping::near_d) {
       lcd::message(1, lcd::ROTATING_CW);
       legs::rotateCWLess();
-      pump::off();
     } else {
-      if (ping::save2pump()) {
-        if (!legs::isNormalized) {
-          lcd::message(1, lcd::NORMALIZING);
-          legs::normalize();
-          pump::off();
-        } else {
-          lcd::message(1, lcd::EXTINGUISHING);
-          pump::on();
-        }
+      if (proxy::isDetectingSomething) {
+        lcd::message(1, lcd::EXTINGUISHING);
+        pump::extinguish(1000);
       } else {
         lcd::message(1, lcd::MOVING_FORWARD);
-        pump::off();
         legs::forward();
       }
     }
@@ -166,12 +218,13 @@ bool flameDetection () {
     return true;
   }
 
-  pump::off();
   return false;
 }
 
 bool getCloser2SRWR () {
   if (ping::far_a && !ping::far_b && !ping::isOnSRWR) {
+    lcd::message(0, lcd::FOUND_SRWR);
+    lcd::message(1, lcd::SHIFTING_RIGHT);
     legs::shiftRight();
     return false;
   }

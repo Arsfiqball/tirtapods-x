@@ -1,23 +1,19 @@
 #define PIN_PUMP 9
 
 namespace pump {
-  bool state_isON = false;
-
   void setup () {
     pinMode(PIN_PUMP, OUTPUT);
   }
 
-  void on () {
-    if (!state_isON) {
-      digitalWrite(PIN_PUMP, LOW);
-      state_isON = true;
-    }
+  void extinguish (unsigned int ms) {
+    digitalWrite(PIN_PUMP, HIGH);
+    delay(ms);
+    digitalWrite(PIN_PUMP, LOW);
+    delay(1000);
   }
 
-  void off () {
-    if (state_isON) {
-      digitalWrite(PIN_PUMP, HIGH);
-      state_isON = false;
-    }
+  void activate (bool active = true) {
+    if (active) digitalWrite(PIN_PUMP, HIGH);
+    else digitalWrite(PIN_PUMP, LOW);
   }
 }

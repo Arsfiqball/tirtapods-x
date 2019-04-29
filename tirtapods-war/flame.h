@@ -35,22 +35,31 @@ namespace flame {
     unsigned int flame_d = analogRead(PIN_PHOTODIODE_D);
     unsigned int flame_e = analogRead(PIN_PHOTODIODE_E);
 
-    Serial.print("A:");
-    Serial.print(flame_a);
-    Serial.print(" B:");
-    Serial.print(flame_b);
-    Serial.print(" C:");
-    Serial.print(flame_c);
-    Serial.print(" D:");
-    Serial.print(flame_d);
-    Serial.print(" E:");
-    Serial.println(flame_e);
-
     is_right = flame_b > 900;
     is_center = flame_c > 900;
     is_left = flame_d > 900;
 
     if (is_right || is_center || is_left) blinkIndicator();
     else digitalWrite(PIN_FLAME_INDICATOR, LOW);
+  }
+
+  String debug () {
+    update();
+
+    String text = "Flame F:";
+    text.concat(analogRead(PIN_PHOTODIODE_C));
+    text.concat("           ");
+    return text;
+  }
+
+  String debug1 () {
+    update();
+
+    String text = "R:";
+    text.concat(analogRead(PIN_PHOTODIODE_B));
+    text.concat(" L:");
+    text.concat(analogRead(PIN_PHOTODIODE_D));
+    text.concat("         ");
+    return text;
   }
 }

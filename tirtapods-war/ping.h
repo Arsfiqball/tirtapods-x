@@ -59,6 +59,39 @@ namespace ping {
     return (duration / 2) / 29.1;
   }
 
+  String debug () {
+    String text = "";
+
+    int pingA = read_ping(ULTRA_A_TRIG, ULTRA_A_ECHO);
+    int pingB = read_ping(ULTRA_B_TRIG, ULTRA_B_ECHO);
+
+    text.concat("Ping A:");
+    text.concat(pingA);
+    text.concat(" B:");
+    text.concat(pingB);
+    text.concat("   ");
+
+    return text;
+  }
+
+  String debug1 () {
+    String text = "";
+
+    int pingC = read_ping(ULTRA_C_TRIG, ULTRA_C_ECHO);
+    int pingD = read_ping(ULTRA_D_TRIG, ULTRA_D_ECHO);
+    int pingE = read_ping(ULTRA_E_TRIG, ULTRA_E_ECHO);
+
+    text.concat("C:");
+    text.concat(pingC);
+    text.concat(" D:");
+    text.concat(pingD);
+    text.concat(" E:");
+    text.concat(pingE);
+    text.concat("   ");
+
+    return text;
+  }
+
   void update () {
     // this ping sensor using round robin method to spread and balance incoming request
     // on purpose to avoid unnecesary delay created everytime ping sensor waits for pulse-in
@@ -73,14 +106,14 @@ namespace ping {
       case PING_A:
         currentPingValue = read_ping(ULTRA_A_TRIG, ULTRA_A_ECHO);
         near_a = currentPingValue < (9 + offset);
-        far_a = currentPingValue < (14 + offsetFar);
+        far_a = currentPingValue < (16 + offsetFar);
         isOnSRWR = currentPingValue < (14 + offset);
         state_nextPingSensor = PING_B;
         break;
       case PING_B:
         currentPingValue = read_ping(ULTRA_B_TRIG, ULTRA_B_ECHO);
-        near_b = currentPingValue < (10 + offset);
-        far_b = currentPingValue < (11 + offsetFar);
+        near_b = currentPingValue < (12 + offset);
+        far_b = currentPingValue < (8 + offsetFar);
         state_nextPingSensor = PING_C;
         break;
       case PING_C:
@@ -91,13 +124,13 @@ namespace ping {
         break;
       case PING_D:
         currentPingValue = read_ping(ULTRA_D_TRIG, ULTRA_D_ECHO);
-        near_d = currentPingValue < (10 + offset);
-        far_d = currentPingValue < (11 + offsetFar);
+        near_d = currentPingValue < (12 + offset);
+        far_d = currentPingValue < (8 + offsetFar);
         state_nextPingSensor = PING_E;
         break;
       case PING_E:
         currentPingValue = read_ping(ULTRA_E_TRIG, ULTRA_E_ECHO);
-        near_e = currentPingValue < (9 + offset);
+        near_e = currentPingValue < (16 + offset);
         far_e = currentPingValue < (14 + offsetFar);
         state_nextPingSensor = PING_A;
         break;
@@ -105,11 +138,11 @@ namespace ping {
   }
 
   bool save2pump () {
-    bool pingB = read_ping(ULTRA_B_TRIG, ULTRA_B_ECHO) < 16;
-    bool pingC = read_ping(ULTRA_C_TRIG, ULTRA_C_ECHO) < 19;
-    bool pingD = read_ping(ULTRA_D_TRIG, ULTRA_D_ECHO) < 16;
+    bool pingB = read_ping(ULTRA_B_TRIG, ULTRA_B_ECHO) < 20;
+    bool pingC = read_ping(ULTRA_C_TRIG, ULTRA_C_ECHO) < 22;
+    bool pingD = read_ping(ULTRA_D_TRIG, ULTRA_D_ECHO) < 20;
 
-    if (pingB || pingC || pingD) return true;
+    if (pingB || (pingC && pingD)) return true;
     return false;
   }
 }
