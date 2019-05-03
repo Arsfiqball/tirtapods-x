@@ -145,6 +145,45 @@
       ]
     }
 
+    const new_steps_forward_low = {
+      L1: [
+        [6, 2.5, -4.5],
+        [6, 2.5, -4.5],
+        [6, 5.5, -4.5],
+        [6, 5.5, -4.5],
+      ],
+      L2: [
+        [6.6,  1.5, -4.5],
+        [6.6,  1.5, -4.5],
+        [6.6, -1.5, -4.5],
+        [6.6, -1.5, -4.5],
+      ],
+      L3: [
+        [6, 5.5, -4.5],
+        [6, 5.5, -4.5],
+        [6, 2.5, -4.5],
+        [6, 2.5, -4.5],
+      ],
+      R1: [
+        [6, 5.5, -4.5],
+        [6, 5.5, -4.5],
+        [6, 2.5, -4.5],
+        [6, 2.5, -4.5],
+      ],
+      R2: [
+        [6.6, -1.5, -4.5],
+        [6.6, -1.5, -4.5],
+        [6.6,  1.5, -4.5],
+        [6.6,  1.5, -4.5],
+      ],
+      R3: [
+        [6, 2.5, -4.5],
+        [6, 2.5, -4.5],
+        [6, 5.5, -4.5],
+        [6, 5.5, -4.5],
+      ]
+    }
+
     const new_steps_backward = {
       L1: [
         [6, 5.5, -6.5],
@@ -632,6 +671,7 @@
       makeCode(new_steps_standby, 'ssc_standby') + `\n` +
       makeCode(new_steps_normalize, 'ssc_normalize') + `\n` +
       makeCodeSync(new_steps_normalize, 'ssc_normalize_sync') + `\n` +
+      makeCode(new_steps_forward_low, 'ssc_forward_low') + `\n` +
       makeCode(new_steps_forward, 'ssc_forward') + `\n` +
       makeCodeSync(new_steps_forward, 'ssc_forward_sync') + `\n` +
       makeCode(new_steps_backward, 'ssc_backward') + `\n` +

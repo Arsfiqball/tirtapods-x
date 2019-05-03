@@ -5,6 +5,17 @@
 #include "pump.h"
 #include "activation.h"
 #include "lcd.h"
+#include "line.h"
+
+bool state_isInversed = true;
+bool state_isInitialized = false;
+
+bool avoidWall(bool inverse = false);
+bool flameDetection();
+bool avoidObstacle(bool inverse = false);
+bool getCloser2SRWR(bool inverse = false);
+void traceRoute();
+void traceRouteInversed();
 
 void setup () {
   ping::setup();
@@ -14,6 +25,7 @@ void setup () {
   pump::setup();
   activation::setup();
   lcd::setup();
+  line::setup();
 
   Serial.begin(9600);
 }
@@ -22,19 +34,39 @@ void loop () {
   activation::update();
 
   if (activation::isON) {
+    if (activation::isLowMove) {
+      lcd::justPrint("Path on front     ", "Moving forward + ");
+      legs::forward(true);
+      return;
+    }
+
+    if (!state_isInitialized) {
+      state_isInversed = ping::checkShouldFollowLeft();
+      state_isInitialized = true;
+    }
+
     ping::update();
     proxy::update();
     flame::update();
+    line::update();
 
-    if (!avoidWall()) return;
-    if (flameDetection()) return;
-    if (!avoidObstacle()) return;
-    if (!getCloser2SRWR()) return;
-    traceRoute();
+    if (state_isInversed) {
+      if (!avoidWall(true)) return;
+      if (flameDetection()) return;
+      if (!avoidObstacle(true)) return;
+      if (!getCloser2SRWR(true)) return;
+      traceRouteInverse();
+    } else {
+      if (!avoidWall()) return;
+      if (flameDetection()) return;
+      if (!avoidObstacle()) return;
+      if (!getCloser2SRWR()) return;
+      traceRoute();
+    }
   } else {
+    if (state_isInitialized) state_isInitialized = false;
+
     if (activation::isMenu) {
-      Serial.print("menu: ");
-      Serial.println(activation::activeMenu);
       if (activation::isMenuChanged) lcd::clean();
       switch (activation::activeMenu) {
         case 0:
@@ -47,6 +79,9 @@ void loop () {
           lcd::justPrint(proxy::debug(), activation::debugSoundActivation());
           break;
         case 3:
+          lcd::justPrint(line::debug(), line::debug1());
+          break;
+        case 4:
           lcd::justPrint("Press start to", "extinguish");
           pump::activate(activation::isStartPushed);
           break;
@@ -54,7 +89,6 @@ void loop () {
           lcd::justPrint("== DEBUG MODE ==", "Press stop again");
       }
     } else {
-      Serial.println("no menu");
       standBy();
     }
   }
@@ -77,20 +111,52 @@ void standBy () {
   legs::normalize();
 }
 
-bool avoidObstacle () {
-  if (proxy::isDetectingSomething && !ping::far_b && !ping::far_c && !ping::far_d) {
+bool avoidObstacle (bool inverse = false) {
+  if (proxy::isDetectingSomething && !ping::far_c) {
     lcd::message(0, lcd::THERE_IS_OBSTACLE);
+
+    unsigned int startCounter = millis();
+    unsigned int currentCounter = millis();
 
     if (!legs::isNormalized) {
       legs::normalize();
       return false;
     }
 
-    legs::ssc_rotateCCW_sync();
-    legs::ssc_rotateCCW_sync();
-    legs::ssc_rotateCCW_sync();
-    legs::ssc_rotateCCW_sync();
-    legs::ssc_rotateCCW_sync();
+    while ((currentCounter - startCounter) <= 850) {
+      legs::rotateCW();
+      ping::update();
+      currentCounter = millis();
+
+      if (ping::far_c) {
+        return false;
+      }
+    }
+
+    while ((currentCounter - startCounter) <= 2450) {
+      legs::rotateCCW();
+      ping::update();
+      currentCounter = millis();
+
+      if (ping::far_c) {
+        return false;
+      }
+    }
+
+    if (inverse) {
+      while ((currentCounter - startCounter) <= (2450 + 7 * 800)) {
+        legs::rotateCW();
+        ping::update();
+        currentCounter = millis();
+      }
+
+    } else {
+      while ((currentCounter - startCounter) <= (2450 + 5 * 800)) {
+        legs::rotateCCW();
+        ping::update();
+        currentCounter = millis();
+      }
+    }
 
     return false;
   }
@@ -98,7 +164,7 @@ bool avoidObstacle () {
   return true;
 }
 
-bool avoidWall () {
+bool avoidWall (bool inverse = false) {
   short int minPos = 0;
   short int maxPos = 8;
   bool minPosFound = false;
@@ -136,7 +202,12 @@ bool avoidWall () {
       legs::backward(); // wall surface is flat
     } else {
       lcd::message(1, lcd::ROTATING_CW);
-      legs::rotateCW(); // wall surface detected is not flat
+
+      if (inverse) {
+        legs::rotateCCW(); // wall surface detected is not flat
+      } else {
+        legs::rotateCW(); // wall surface detected is not flat
+      }
     }
   } else if (5 <= avg && avg <= 7) {
     lcd::message(0, lcd::WALL_ON_LEFT);
@@ -151,9 +222,18 @@ bool avoidWall () {
   return false;
 }
 
-bool flameDetection () {
-  Serial.println(proxy::isDetectingSomething);
+bool detectLine () {
+  if (line::isDetected) {
+    lcd::message(0, lcd::LINE_DETECTED);
+    lcd::message(1, lcd::NORMALIZING);
+    legs::normalize();
+    return true;
+  }
 
+  return false;
+}
+
+bool flameDetection () {
   if (flame::is_right && (ping::near_b || ping::near_a)) {
     lcd::message(0, lcd::FIRE_ON_RIGHT);
     lcd::message(1, lcd::SHIFTING_LEFT);
@@ -209,6 +289,9 @@ bool flameDetection () {
       if (proxy::isDetectingSomething) {
         lcd::message(1, lcd::EXTINGUISHING);
         pump::extinguish(1000);
+        legs::ssc_backward_sync();
+        legs::ssc_backward_sync();
+        legs::ssc_backward_sync();
       } else {
         lcd::message(1, lcd::MOVING_FORWARD);
         legs::forward();
@@ -221,12 +304,21 @@ bool flameDetection () {
   return false;
 }
 
-bool getCloser2SRWR () {
-  if (ping::far_a && !ping::far_b && !ping::isOnSRWR) {
-    lcd::message(0, lcd::FOUND_SRWR);
-    lcd::message(1, lcd::SHIFTING_RIGHT);
-    legs::shiftRight();
-    return false;
+bool getCloser2SRWR (bool inverse = false) {
+  if (inverse) {
+    if (ping::far_e && !ping::far_d && !ping::isOnSLWR) {
+      lcd::message(0, lcd::FOUND_SLWR);
+      lcd::message(1, lcd::SHIFTING_LEFT);
+      legs::shiftLeft();
+      return false;
+    }
+  } else {
+    if (ping::far_a && !ping::far_b && !ping::isOnSRWR) {
+      lcd::message(0, lcd::FOUND_SRWR);
+      lcd::message(1, lcd::SHIFTING_RIGHT);
+      legs::shiftRight();
+      return false;
+    }
   }
 
   return true;
@@ -247,7 +339,37 @@ void traceRoute () {
     legs::turnLeft();
   } else {
     lcd::message(0, lcd::NO_PATH);
+    lcd::message(1, lcd::ROTATING_CW);
+    legs::rotateCW(1600);
+    ping::update();
+    ping::update();
+    ping::update();
+    ping::update();
+    ping::update();
+  }
+}
+
+void traceRouteInverse () {
+  if (!ping::far_e && !ping::far_d) {
+    lcd::message(0, lcd::PATH_ON_LEFT);
+    lcd::message(1, lcd::TURNING_LEFT);
+    legs::turnLeft();
+  } else if (ping::far_e && !ping::far_c) {
+    lcd::message(0, lcd::PATH_ON_FRONT);
+    lcd::message(1, lcd::MOVING_FORWARD);
+    legs::forward();
+  } else if (ping::far_e && ping::far_c && !ping::far_a) {
+    lcd::message(0, lcd::PATH_ON_RIGHT);
+    lcd::message(1, lcd::TURNING_RIGHT);
+    legs::turnRight();
+  } else {
+    lcd::message(0, lcd::NO_PATH);
     lcd::message(1, lcd::ROTATING_CCW);
-    legs::rotateCCW();
+    legs::rotateCCW(1600);
+    ping::update();
+    ping::update();
+    ping::update();
+    ping::update();
+    ping::update();
   }
 }

@@ -27,7 +27,9 @@ namespace lcd {
     PATH_ON_FRONT,
     PATH_ON_LEFT,
     NO_PATH,
-    FOUND_SRWR
+    FOUND_SRWR,
+    FOUND_SLWR,
+    LINE_DETECTED
   };
 
   MessageID state_activeMessageIDs[2] = { BLANK, BLANK };
@@ -140,6 +142,12 @@ namespace lcd {
         break;
       case FOUND_SRWR:
         lcd.print(F("Found SRWR"));
+        break;
+      case FOUND_SLWR:
+        lcd.print(F("Found SLWR"));
+        break;
+      case LINE_DETECTED:
+        lcd.print(F("Line detected"));
         break;
     }
   }

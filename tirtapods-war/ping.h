@@ -21,6 +21,7 @@ namespace ping {
   bool far_d = false;
   bool far_e = false;
   bool isOnSRWR = false;
+  bool isOnSLWR = false;
 
   enum PingSensorType {
     PING_A,
@@ -99,14 +100,14 @@ namespace ping {
     // maximum update calls equals to number of sensors (five)
 
     unsigned int currentPingValue;
-    unsigned int offset = 1;
+    unsigned int offset = 0;
     unsigned int offsetFar = 20;
 
     switch (state_nextPingSensor) {
       case PING_A:
         currentPingValue = read_ping(ULTRA_A_TRIG, ULTRA_A_ECHO);
         near_a = currentPingValue < (9 + offset);
-        far_a = currentPingValue < (16 + offsetFar);
+        far_a = currentPingValue < (8 + offsetFar);
         isOnSRWR = currentPingValue < (14 + offset);
         state_nextPingSensor = PING_B;
         break;
@@ -130,10 +131,25 @@ namespace ping {
         break;
       case PING_E:
         currentPingValue = read_ping(ULTRA_E_TRIG, ULTRA_E_ECHO);
-        near_e = currentPingValue < (16 + offset);
-        far_e = currentPingValue < (14 + offsetFar);
+        near_e = currentPingValue < (9 + offset);
+        far_e = currentPingValue < (8 + offsetFar);
+        isOnSLWR = currentPingValue < (14 + offset);
         state_nextPingSensor = PING_A;
         break;
+    }
+  }
+
+  bool checkShouldFollowLeft () {
+    update();
+    update();
+    update();
+    update();
+    update();
+
+    if (ping::far_e || ping::far_d) {
+      return true;
+    } else {
+      return false;
     }
   }
 

@@ -8,6 +8,7 @@ namespace legs {
     STANDBY,
     NORMALIZE,
     FORWARD,
+    FORWARD_LOW,
     BACKWARD,
     SHIFT_RIGHT,
     SHIFT_LEFT,
@@ -91,6 +92,31 @@ namespace legs {
     com.println(F("#4P1526 #5P1832 #6P1806 #12P1324 #13P1832 #14P1806 #24P1500 #25P1167 #26P951 T200")); delay(200);
     com.println(F("#8P1450 #9P2222 #10P2006 #20P1374 #21P752 #22P901 #28P1526 #29P752 #30P981 T200")); delay(200);
     com.println(F("#8P1450 #9P1883 #10P1799 #20P1374 #21P1068 #22P1094 #28P1526 #29P1068 #30P1206 T200")); delay(200);
+  }
+
+  void ssc_forward_low () {
+    switch (state_nextStep) {
+      case 0:
+        com.println(F("#4P1649 #5P2175 #6P2065 #8P1308 #9P2216 #10P1990 #12P1422 #13P2106 #14P1909 #20P1472 #21P794 #22P991 #24P1358 #25P834 #26P760 #28P1649 #29P725 #30P905 T200"));
+        state_isComboBUp = true;
+        state_nextStep = 1;
+        break;
+      case 1:
+        com.println(F("#4P1649 #5P2175 #6P2065 #8P1308 #9P2216 #10P1990 #12P1422 #13P2106 #14P1909 #20P1472 #21P794 #22P991 #24P1358 #25P834 #26P760 #28P1649 #29P725 #30P905 T200"));
+        state_isComboBUp = false;
+        state_nextStep = 2;
+        break;
+      case 2:
+        com.println(F("#4P1428 #5P2106 #6P1909 #8P1592 #9P2216 #10P1990 #12P1201 #13P2175 #14P2065 #20P1251 #21P725 #22P835 #24P1642 #25P834 #26P760 #28P1428 #29P794 #30P1085 T200"));
+        state_isComboAUp = true;
+        state_nextStep = 3;
+        break;
+      case 3:
+        com.println(F("#4P1428 #5P2106 #6P1909 #8P1592 #9P2216 #10P1990 #12P1201 #13P2175 #14P2065 #20P1251 #21P725 #22P835 #24P1642 #25P834 #26P760 #28P1428 #29P794 #30P1085 T200"));
+        state_isComboAUp = false;
+        state_nextStep = 0;
+        break;
+    }
   }
 
   void ssc_forward () {
@@ -402,6 +428,9 @@ namespace legs {
         case FORWARD:
           ssc_forward();
           break;
+        case FORWARD_LOW:
+          ssc_forward_low();
+          break;
         case BACKWARD:
           ssc_backward();
           break;
@@ -464,8 +493,9 @@ namespace legs {
     }
   }
 
-  void forward () {
-    move(FORWARD);
+  void forward (bool low = false) {
+    if (low) move(FORWARD_LOW);
+    else move(FORWARD);
   }
 
   void backward () {
@@ -480,12 +510,30 @@ namespace legs {
     move(SHIFT_LEFT);
   }
 
-  void rotateCW () {
-    move(ROTATE_CW);
+  void rotateCW (unsigned int keep = 0) {
+    if (keep > 0) {
+      unsigned int startCounter = millis();
+      unsigned int currentCounter = millis();
+      while ((currentCounter - startCounter) < keep) {
+        move(ROTATE_CW);
+        currentCounter = millis();
+      }
+    } else {
+      move(ROTATE_CW);
+    }
   }
 
-  void rotateCCW () {
-    move(ROTATE_CCW);
+  void rotateCCW (unsigned int keep = 0) {
+    if (keep > 0) {
+      unsigned int startCounter = millis();
+      unsigned int currentCounter = millis();
+      while ((currentCounter - startCounter) < keep) {
+        move(ROTATE_CCW);
+        currentCounter = millis();
+      }
+    } else {
+      move(ROTATE_CCW);
+    }
   }
 
   void rotateCWLess () {

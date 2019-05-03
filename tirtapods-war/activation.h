@@ -46,6 +46,10 @@ namespace activation {
     }
 
     if (startIsPressed) {
+      if (currentStartRecord - beginRecord > 1000) {
+        isLowMove = !isLowMove;
+      }
+
       isON = true;
     }
   
@@ -59,7 +63,7 @@ namespace activation {
       } else if (isMenu) {
         isMenuChanged = true;
 
-        if (activeMenu >= 3) {
+        if (activeMenu >= 4) {
           activeMenu = 0;
         } else {
           activeMenu = activeMenu + 1;
@@ -73,6 +77,7 @@ namespace activation {
 
     if (digitalRead(PIN_SOUND_ACTIVATION) == LOW && !isMenu) {
       isON = true;
+      isLowMove = false;
     }
   }
 }

@@ -28,6 +28,11 @@ namespace flame {
     }
   }
 
+  void activateIndicator (bool active = true) {
+    if (active) digitalWrite(PIN_FLAME_INDICATOR, HIGH);
+    else digitalWrite(PIN_FLAME_INDICATOR, LOW);
+  }
+
   void update () {
     unsigned int flame_a = analogRead(PIN_PHOTODIODE_A);
     unsigned int flame_b = analogRead(PIN_PHOTODIODE_B);
@@ -39,8 +44,7 @@ namespace flame {
     is_center = flame_c > 900;
     is_left = flame_d > 900;
 
-    if (is_right || is_center || is_left) blinkIndicator();
-    else digitalWrite(PIN_FLAME_INDICATOR, LOW);
+    activateIndicator(is_right || is_center || is_left);
   }
 
   String debug () {
