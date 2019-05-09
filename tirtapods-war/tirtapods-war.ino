@@ -9,6 +9,8 @@
 
 bool state_isInversed = true;
 bool state_isInitialized = false;
+unsigned int state_startTime = 0;
+unsigned int state_lastSWR = 0;
 
 bool avoidWall(bool inverse = false);
 bool flameDetection();
@@ -41,6 +43,7 @@ void loop () {
     }
 
     if (!state_isInitialized) {
+      state_startTime = millis();
       state_isInversed = ping::checkShouldFollowLeft();
       state_isInitialized = true;
     }
@@ -49,14 +52,29 @@ void loop () {
     proxy::update();
     flame::update();
     line::update();
+//
+//    Serial.println(state_lastSWR);
+//
+//    if ((millis() - state_lastSWR) > 17000) {
+//      Serial.println("called");
+//      state_isInversed = !state_isInversed;
+//    }
 
     if (state_isInversed) {
+      if (ping::isOnSLWR) {
+        state_lastSWR = millis();
+      }
+
       if (!avoidWall(true)) return;
       if (flameDetection()) return;
       if (!avoidObstacle(true)) return;
       if (!getCloser2SRWR(true)) return;
       traceRouteInverse();
     } else {
+      if (ping::isOnSRWR) {
+        state_lastSWR = millis();
+      }
+
       if (!avoidWall()) return;
       if (flameDetection()) return;
       if (!avoidObstacle()) return;
@@ -123,8 +141,8 @@ bool avoidObstacle (bool inverse = false) {
       return false;
     }
 
-    while ((currentCounter - startCounter) <= 850) {
-      legs::rotateCW();
+    while ((currentCounter - startCounter) <= 1600) {
+      legs::rotateCWLess();
       ping::update();
       currentCounter = millis();
 
@@ -133,30 +151,49 @@ bool avoidObstacle (bool inverse = false) {
       }
     }
 
-    while ((currentCounter - startCounter) <= 2450) {
-      legs::rotateCCW();
+    while ((currentCounter - startCounter) <= 4800) {
+      legs::rotateCCWLess();
       ping::update();
       currentCounter = millis();
 
       if (ping::far_c) {
         return false;
       }
+    }
+
+    while ((currentCounter - startCounter) <= 6400) {
+      legs::rotateCWLess();
+      ping::update();
+      currentCounter = millis();
+
+      if (ping::far_c) {
+        return false;
+      }
+    }
+
+    while ((currentCounter - startCounter) <= 7200) {
+      legs::backward();
+      currentCounter = millis();
     }
 
     if (inverse) {
-      while ((currentCounter - startCounter) <= (2450 + 7 * 800)) {
+      while ((currentCounter - startCounter) <= (7200 + 6 * 800)) {
         legs::rotateCW();
-        ping::update();
         currentCounter = millis();
       }
 
     } else {
-      while ((currentCounter - startCounter) <= (2450 + 5 * 800)) {
+      while ((currentCounter - startCounter) <= (7200 + 6 * 800)) {
         legs::rotateCCW();
-        ping::update();
         currentCounter = millis();
       }
     }
+
+    ping::update();
+    ping::update();
+    ping::update();
+    ping::update();
+    ping::update();
 
     return false;
   }
@@ -289,9 +326,13 @@ bool flameDetection () {
       if (proxy::isDetectingSomething) {
         lcd::message(1, lcd::EXTINGUISHING);
         pump::extinguish(1000);
-        legs::ssc_backward_sync();
-        legs::ssc_backward_sync();
-        legs::ssc_backward_sync();
+
+        unsigned int startCounter = millis();
+        unsigned int currentCounter = millis();
+
+        while ((currentCounter - startCounter) < 1650) {
+          legs::backward();
+        }
       } else {
         lcd::message(1, lcd::MOVING_FORWARD);
         legs::forward();
@@ -339,8 +380,8 @@ void traceRoute () {
     legs::turnLeft();
   } else {
     lcd::message(0, lcd::NO_PATH);
-    lcd::message(1, lcd::ROTATING_CW);
-    legs::rotateCW(1600);
+    lcd::message(1, lcd::ROTATING_CCW);
+    legs::rotateCCW(1600);
     ping::update();
     ping::update();
     ping::update();
@@ -364,8 +405,8 @@ void traceRouteInverse () {
     legs::turnRight();
   } else {
     lcd::message(0, lcd::NO_PATH);
-    lcd::message(1, lcd::ROTATING_CCW);
-    legs::rotateCCW(1600);
+    lcd::message(1, lcd::ROTATING_CW);
+    legs::rotateCW(1600);
     ping::update();
     ping::update();
     ping::update();
