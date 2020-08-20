@@ -341,9 +341,9 @@ bool detectLine () {
       legs::rotateCCW();
     }
     while ((currentFakeCounter - startFakeCounter) < 13000) {
-      lcd::message(1, lcd::SHIFTING_RIGHT);
+      lcd::message(1, lcd::SHIFTING_LEFT);
       currentFakeCounter = millis();
-      legs::shiftRight();
+      legs::shiftLeft();
     }
     ping::update();
     ping::update();
