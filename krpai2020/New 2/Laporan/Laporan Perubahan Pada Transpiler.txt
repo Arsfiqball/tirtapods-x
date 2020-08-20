@@ -1,0 +1,124 @@
+Laporan Pada Transpiler
+
+18/08/2020
+
+Perubahan Pada Alpha, Beta, Teta
+
+const leg = {
+      L1: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, -550, 2000, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, +450, 1550, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, -500, 2500, false))
+      },
+
+      L2: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, -400, 1400, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, +470, 1600, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, -450, 2450, false))
+      },
+
+      L3: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, +450, 950, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, +450, 1400, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, -450, 2500, false))
+      },
+
+      R1: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, +500, 1000, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, -460, 1400, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, +480, 420, false))
+      },
+
+      R2: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, +5, 1545, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, -510, 1550, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, +480, 320, false))
+      },
+
+      R3: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, -480, 1840, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, -500, 1400, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, +550, 300, false))
+      }
+    }
+
+Menjadi : 
+
+    const leg = {
+      L1: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, -550, 2000, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, +450, 1550, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, -500, 2500, false))
+      },
+
+      L2: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, -400, 1400, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, +470, 1600, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, -450, 2450, false))
+      },
+
+      L3: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, +450, 950, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, +450, 1400, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, -450, 2500, false))
+      },
+
+      R1: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, +500, 1000, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, -460, 1400, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, +480, 420, false))
+      },
+
+      R2: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, +500, 1400, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, -460, 1500, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, +480, 320, false))
+      },
+
+      R3: {
+        teta: deg => Math.round(convert(deg, Math.PI/4, -500, 1800, false)),
+        beta: deg => Math.round(convert(deg, Math.PI/4, -500, 1400, false)),
+        alpha: deg => Math.round(convert(deg, Math.PI/4, +550, 300, false))
+      }
+    }
+
+Penambahan cons new_steps_forward_higher :
+
+const new_steps_forward_higher = {
+      L1: [
+        [6, 2.5, -6.5],
+        [6, 2.5, -6.5],
+        [6, 5.5, -2.5],
+        [6, 5.5, -6.5],
+      ],
+      L2: [
+        [6.6,  1.5, -2.5],
+        [6.6,  1.5, -6.5],
+        [6.6, -1.5, -6.5],
+        [6.6, -1.5, -6.5],
+      ],
+      L3: [
+        [6, 5.5, -6.5],
+        [6, 5.5, -6.5],
+        [6, 2.5, -2.5],
+        [6, 2.5, -6.5],
+      ],
+      R1: [
+        [6, 5.5, -2.5],
+        [6, 5.5, -6.5],
+        [6, 2.5, -6.5],
+        [6, 2.5, -6.5],
+      ],
+      R2: [
+        [6.6, -1.5, -6.5],
+        [6.6, -1.5, -6.5],
+        [6.6,  1.5, -2.5],
+        [6.6,  1.5, -6.5],
+      ],
+      R3: [
+        [6, 2.5, -2.5],
+        [6, 2.5, -6.5],
+        [6, 5.5, -6.5],
+        [6, 5.5, -6.5],
+      ]
+    }
